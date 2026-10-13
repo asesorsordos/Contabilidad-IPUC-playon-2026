@@ -6,13 +6,6 @@
     <title>Contabilidad IPUC PLAYON 2026</title>
     <!-- Bootstrap CSS -->
     <link href="./libs/css/bootstrap.min.css" rel="stylesheet">
-<!-- Firebase App (Modular) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
-        // Aquí pondremos la configuración en el paso siguiente...
-    </script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -40,82 +33,62 @@
         #logo-preview {
             max-height: 80px; max-width: 100%; border: 1px solid #ddd; padding: 5px; margin-top: 10px;
         }
-        @media print {
-            body * {
-                visibility: hidden; !important;
-            }
-            #receipt-print-area, #receipt-print-area * {
-        visibility: visible !important;
-            }
-            #receipt-print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-    .modal-backdrop, .modal-header, .modal-footer {
-        display: none !important;
-    }
-}
-            .modal-footer {
-                display: none;
-            }
-            .modal-header .btn-close { display: none; }
 
-            /* Estilos específicos para Media Carta con Copia */
+        /* --- Reglas de Impresión Únicas y Estrictas --- */
+        @media print {
             @page {
-                size: half-letter; /* O half-letter según tu impresora */
-                margin: 0.5cm;
+                size: 5.5in 8.5in; /* Media Carta (Half Letter) Portrait */
+                margin: 0.8cm;
             }
-            .receipt-container-print {
-                height: 50%; /* Divide la hoja física en dos mitades exactas */
-                max-height: 13cm;
-                box-sizing: border-box;
-                page-break-inside: avoid;
-            }
-            .receipt-divider {
-                border-bottom: 1px dashed #000;
-                margin: 1rem 0;
-            }
-        }
-
-        @media print {
             body * {
-                visibility: hidden;
+                visibility: hidden !important;
             }
             .print-section, .print-section * {
-                visibility: visible;
+                visibility: visible !important;
             }
             .print-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            .modal-footer {
-                display: none;
+            .modal-backdrop, .modal-header, .modal-footer {
+                display: none !important;
             }
-            .modal-header .btn-close { display: none; }
+            .receipt-page {
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                box-sizing: border-box !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            .receipt-page:last-child {
+                page-break-after: avoid;
+            }
         }
+
         /* --- Mejoras Visuales --- */
-        /* Resaltar tarjetas de resumen al pasar el mouse */
         .card.bg-success:hover, .card.bg-danger:hover, .card.bg-primary:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
             transition: all 0.2s ease-out;
         }
-        /* Resaltar campos de formulario al enfocarlos */
         .form-control:focus, .form-select:focus {
             background-color: #eef5ff;
         }
 
         /* --- Dark Mode Styles --- */
         body.dark-mode {
-            background-color: #1a1a1a; /* Más oscuro para mayor contraste */
-            color: #e9ecef; /* Texto más claro */
+            background-color: #1a1a1a;
+            color: #e9ecef;
         }
         body.dark-mode .card {
-            background-color: #2b2b2b; /* Un poco más claro que el fondo */
+            background-color: #2b2b2b;
             border-color: #444;
         }
         body.dark-mode .card-header, body.dark-mode .modal-header, body.dark-mode .modal-footer, body.dark-mode .border-top {
@@ -125,10 +98,10 @@
             color: #e9ecef;
         }
         body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
-            background-color: rgba(255, 255, 255, 0.07); /* Rayas de tabla más visibles */
+            background-color: rgba(255, 255, 255, 0.07);
         }
         body.dark-mode .table-hover > tbody > tr:hover > * {
-            background-color: rgba(255, 255, 255, 0.1); /* Hover de tabla más visible */
+            background-color: rgba(255, 255, 255, 0.1);
         }
         body.dark-mode .form-control, body.dark-mode .form-select {
             background-color: #3a3a3a;
@@ -140,7 +113,7 @@
         }
         body.dark-mode .form-control:focus, body.dark-mode .form-select:focus {
             background-color: #3a3a3a;
-            border-color: #0d6efd; /* Resaltar foco con color primario de Bootstrap */
+            border-color: #0d6efd;
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
         body.dark-mode .input-group-text {
@@ -170,7 +143,6 @@
             color: #fff;
         }
 
-        /* Ocultar flechas de aumento/disminución en campos de número */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -199,7 +171,7 @@
                         <div class="card text-white bg-success">
                             <div class="card-body">
                                 <h4 class="card-title">Total Ingresos</h4>
-                        <p class="card-text fs-4 fw-bold" id="total-income">$0</p>
+                                <p class="card-text fs-4 fw-bold" id="total-income">$0</p>
                             </div>
                         </div>
                     </div>
@@ -207,7 +179,7 @@
                         <div class="card text-white bg-danger">
                             <div class="card-body">
                                 <h4 class="card-title">Total Egresos</h4>
-                        <p class="card-text fs-4 fw-bold" id="total-expenses">$0</p>
+                                <p class="card-text fs-4 fw-bold" id="total-expenses">$0</p>
                             </div>
                         </div>
                     </div>
@@ -215,7 +187,7 @@
                         <div class="card text-white bg-primary">
                             <div class="card-body">
                                 <h4 class="card-title">Saldo Total</h4>
-                        <p class="card-text fs-4 fw-bold" id="total-balance">$0</p>
+                                <p class="card-text fs-4 fw-bold" id="total-balance">$0</p>
                             </div>
                         </div>
                     </div>
@@ -313,7 +285,6 @@
                         <label for="fund-filter" class="form-label-sm me-1">Fondo:</label>
                         <select id="fund-filter" class="form-select form-select-sm w-auto d-inline-block">
                             <option value="all">Todos los Fondos</option>
-                            <!-- Opciones se llenarán con JS -->
                         </select>
                     </div>
                     <div class="me-2 mb-2 mb-md-0">
@@ -366,7 +337,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="receiptModalLabel">Recibo</h5>
+                    <h5 class="modal-title" id="receiptModalLabel">Comprobante</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="receipt-content">
@@ -374,7 +345,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" onclick="printContent('receipt-content')">Imprimir Recibo</button>
+                    <button type="button" class="btn btn-primary me-2" onclick="printReceipt(false)">Imprimir Original (1 Hoja)</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="printReceipt(true)">Imprimir con Copia (2 Hojas)</button>
                 </div>
             </div>
         </div>
@@ -463,13 +435,7 @@
 
                     <div class="alert alert-warning" role="alert">
                         <h4 class="alert-heading">¡Importante! Sobre el Almacenamiento de Datos</h4>
-                        <p>Esta aplicación utiliza el almacenamiento local (`localStorage`) de tu navegador. Esto significa:</p>
-                        <hr>
-                        <ul>
-                            <li>Los datos son locales: La información se almacena <strong>únicamente en la computadora y el navegador</strong> que estás utilizando. No se sincroniza entre dispositivos.</li>
-                            <li><strong>Riesgo de pérdida de datos:</strong> Si limpias los datos de tu navegador (caché, historial, etc.), <strong>perderás toda la información contable registrada</strong>.</li>
-                            <li>Se recomienda encarecidamente utilizar la función <strong>"Exportar"</strong> de forma regular para crear copias de seguridad.</li>
-                        </ul>
+                        <p>Esta aplicación utiliza Firebase Cloud Firestore para sincronizar datos en tiempo real.</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -543,14 +509,13 @@
     <!-- Bootstrap JS -->
     <script src="./libs/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Firebase SDKs -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // TODO: Reemplaza estos datos con los que te dio Firebase en tu consola
         const firebaseConfig = {
-             apiKey: "AIzaSyCut2sbxj1UKmwD2TinAgxBqXNiosM-PiU",
+            apiKey: "AIzaSyCut2sbxj1UKmwD2TinAgxBqXNiosM-PiU",
             authDomain: "contabilidad2026-a489c.firebaseapp.com",
             projectId: "contabilidad2026-a489c",
             storageBucket: "contabilidad2026-a489c.firebasestorage.app",
@@ -558,11 +523,11 @@
             appId: "1:975948672958:web:b20be1bd0237a4a04f93ef"
         };
 
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         let cachedEntries = [];
+        let currentReceiptEntry = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const form = document.getElementById('accounting-form');
@@ -587,7 +552,6 @@
                 "Jóvenes", "Misiones", "Música", "Obra Social"
             ];
 
-            // --- Gestión de Configuración (Empresa y Logo) ---
             const getSettings = () => {
                 return JSON.parse(localStorage.getItem('accountingSettings')) || { companyName: '', companyLogo: '' };
             };
@@ -644,7 +608,6 @@
                 }
             });
 
-            // --- Gestión de Fondos ---
             const getFunds = () => {
                 const fundsJSON = localStorage.getItem('accountingFunds');
                 if (fundsJSON) {
@@ -785,7 +748,6 @@
                 }
             };
 
-            // --- Conexión Firebase (Entradas) ---
             const fetchEntriesFromFirebase = async () => {
                 const querySnapshot = await getDocs(collection(db, "entries"));
                 cachedEntries = [];
@@ -928,69 +890,111 @@
                 }
             };
 
-           window.showReceiptById = (id) => {
-            const entry = cachedEntries.find(e => e.id === id);
-            const settings = getSettings();
-            if (!entry) return;
-               receiptContent.innerHTML = ''; // Limpia cualquier residuo anterior
+            // Plantilla reutilizable para generar la hoja Media Carta distribuida uniformemente
+            const renderHalfLetterReceipt = (entry, settings, copyLabel) => {
+                const isIncome = entry.type === 'Ingreso';
+                const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
+                const personLabel = isIncome ? 'Recibido de' : 'Pagado a';
 
-            const isIncome = entry.type === 'Ingreso';
-            const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
-            const personLabel = isIncome ? 'Recibido de' : 'Pagado a';
+                return `
+                    <div class="receipt-page p-4 border rounded bg-white" style="min-height: 6.8in; box-sizing: border-box; font-size: 1.05rem;">
+                        <!-- Encabezado con Logo -->
+                        <div class="receipt-header border-bottom border-dark pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    ${settings.companyLogo ? `<img src="${settings.companyLogo}" alt="Logo" style="max-height: 60px; max-width: 180px; object-fit: contain;">` : ''}
+                                    <h4 class="mt-2 mb-0 fw-bold" style="font-size: 1.25rem;">${settings.companyName || 'Contabilidad'}</h4>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="mb-1 fw-bold text-uppercase">${receiptTitle}</h5>
+                                    <span class="badge bg-dark text-white px-3 py-1 fs-6">${copyLabel}</span>
+                                    <div class="text-muted mt-2 fw-semibold">Nro: ${entry.receiptNumber || entry.id}</div>
+                                </div>
+                            </div>
+                        </div>
 
-            // Estructura interna del recibo (reutilizable para Original y Copia)
-            const receiptTemplate = (copyType) => `
-                <div class="receipt p-3" style="border: 1px solid #ccc; font-size: 0.9rem;">
-                    <div class="receipt-header mb-2 pb-2 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                ${settings.companyLogo ? `<img src="${settings.companyLogo}" alt="Logo" style="max-height: 45px; max-width: 150px; object-fit: contain;">` : ''}
-                                <h5 class="mt-1 mb-0" style="font-size: 1rem;">${settings.companyName || 'Contabilidad'}</h5>
+                        <!-- Cuerpo de Información Distribuido -->
+                        <div class="receipt-body my-auto py-2">
+                            <div class="row mb-3">
+                                <div class="col-6"><strong>Fecha:</strong> ${entry.date}</div>
+                                <div class="col-6 text-end"><strong>Fondo:</strong> ${entry.fund}</div>
                             </div>
-                            <div class="text-end">
-                                <h6 class="mb-0 fw-bold">${receiptTitle}</h6>
-                                <span class="badge bg-secondary text-dark">${copyType}</span>
-                                <div class="small text-muted">Nro: ${entry.receiptNumber || entry.id}</div>
+                            <div class="mb-3">
+                                <strong>${personLabel}:</strong> ${entry.person || '_________________________________'}
                             </div>
-                        </div>
-                    </div>
-                    <div class="receipt-body">
-                        <div class="row mb-1">
-                            <div class="col-6"><strong>Fecha:</strong> ${entry.date}</div>
-                            <div class="col-6"><strong>Fondo:</strong> ${entry.fund}</div>
-                        </div>
-                        <p class="mb-1"><strong>${personLabel}:</strong> ${entry.person || '_________________________'}</p>
-                        <p class="mb-1"><strong>Concepto:</strong> ${entry.concept}</p>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span><strong>Tipo:</strong> ${entry.type}</span>
-                            <span class="fs-6 fw-bold">Monto: $${formatNumber(parseFloat(entry.amount))}</span>
-                        </div>
-                        <div class="row mt-4 pt-3 text-center small">
-                            <div class="col-6">
-                                <div class="border-top border-dark pt-1">Firma Recibido</div>
+                            <div class="mb-3">
+                                <strong>Concepto:</strong> ${entry.concept}
                             </div>
-                            <div class="col-6">
-                                <div class="border-top border-dark pt-1">Firma Tesorero(a)</div>
+                            <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border my-4">
+                                <span class="fs-5"><strong>Tipo:</strong> ${entry.type}</span>
+                                <span class="fs-4 fw-bold text-primary">Monto: $${formatNumber(parseFloat(entry.amount))}</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-            `;
 
-            // Inyectamos ambas mitades (Original y Copia) en el área de impresión
-            receiptContent.innerHTML = `
-                <div id="receipt-print-area">
-                    <div class="receipt-container-print">
-                        ${receiptTemplate('ORIGINAL')}
+                        <!-- Firmas al final de la Hoja Media Carta -->
+                        <div class="receipt-footer mt-auto pt-4">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="border-top border-dark mx-3 pt-1 fw-bold">Firma Recibido</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border-top border-dark mx-3 pt-1 fw-bold">Firma Tesorero(a)</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="receipt-divider"></div>
-                    <div class="receipt-container-print">
-                        ${receiptTemplate('COPIA')}
+                `;
+            };
+
+            window.showReceiptById = (id) => {
+                const entry = cachedEntries.find(e => e.id === id);
+                const settings = getSettings();
+                if (!entry) return;
+
+                currentReceiptEntry = entry;
+                receiptContent.innerHTML = `
+                    <div id="receipt-print-area">
+                        ${renderHalfLetterReceipt(entry, settings, 'ORIGINAL')}
                     </div>
-                </div>
-            `;
-            receiptModal.show();
-        };
+                `;
+                receiptModal.show();
+            };
+
+            window.printReceipt = (includeCopy) => {
+                if (!currentReceiptEntry) return;
+                const settings = getSettings();
+                
+                let printHTML = `
+                    <div id="receipt-print-area">
+                        ${renderHalfLetterReceipt(currentReceiptEntry, settings, 'ORIGINAL')}
+                `;
+
+                if (includeCopy) {
+                    printHTML += renderHalfLetterReceipt(currentReceiptEntry, settings, 'COPIA');
+                }
+
+                printHTML += `</div>`;
+
+                receiptContent.innerHTML = printHTML;
+
+                const printArea = document.getElementById('receipt-print-area');
+                if (printArea) {
+                    const parentModalBody = printArea.closest('.modal-body');
+                    if (parentModalBody) {
+                        parentModalBody.classList.add('print-section');
+                        window.print();
+                        parentModalBody.classList.remove('print-section');
+                    }
+                }
+
+                // Restaurar vista limpia
+                receiptContent.innerHTML = `
+                    <div id="receipt-print-area">
+                        ${renderHalfLetterReceipt(currentReceiptEntry, settings, 'ORIGINAL')}
+                    </div>
+                `;
+            };
+
             window.printContent = (elementId) => {
                 const printArea = document.getElementById(elementId);
                 if (!printArea) return;
@@ -1093,7 +1097,6 @@
                 });
             };
 
-            // Tema visual
             const applyTheme = (theme) => {
                 if (theme === 'dark') {
                     body.classList.add('dark-mode');
@@ -1111,9 +1114,8 @@
             });
             applyTheme(localStorage.getItem('theme') || 'light');
 
-            // Carga inicial
             populateFundSelects();
-            const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100,];
+            const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
             const tableBody = document.getElementById('denomination-table');
             tableBody.innerHTML = '';
             denominations.forEach(value => {
@@ -1130,7 +1132,6 @@
             await updateDisplay();
         });
 
-        // --- FUNCIONES GLOBALES DE ARQUEO FUERA DEL DOMContentLoaded ---
         window.openCashReconciliation = () => {
             const entries = cachedEntries;
             let totalIncome = 0;
