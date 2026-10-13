@@ -35,53 +35,52 @@
         }
 
         /* --- Reglas de Impresión Únicas y Estrictas --- */
-      @media print {
-    @page {
-        size: 5.5in 8.5in portrait;
-        margin: 0.3cm;
-    }
+        @media print {
+            @page {
+                size: 5.5in 8.5in; /* Tamaño exacto Media Carta (Half-Letter) */
+                margin: 0.4cm;     
+            }
+            body * {
+                visibility: hidden !important;
+            }
+            .print-section, .print-section * {
+                visibility: visible !important;
+            }
+            .print-section {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+            }
+            .modal-backdrop, .modal-header, .modal-footer {
+                display: none !important;
+            }
+            .receipt-page {
+                height: 18cm !important;
+                max-height: 18.5cm !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                box-sizing: border-box !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                overflow: hidden !important;
+            }
+            .receipt-page:last-child {
+                page-break-after: avoid !important;
+            }
+        }
 
-    body * {
-        visibility: hidden !important;
-    }
+        /* --- Mejoras Visuales --- */
+        .card.bg-success:hover, .card.bg-danger:hover, .card.bg-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: all 0.2s ease-out;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #eef5ff;
+        }
 
-    .print-section,
-    .print-section * {
-        visibility: visible !important;
-    }
-
-    .print-section {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .modal-backdrop,
-    .modal-header,
-    .modal-footer,
-    .btn-close {
-        display: none !important;
-    }
-
-    .receipt-page {
-        width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        page-break-after: always !important;
-        page-break-inside: avoid !important;
-        overflow: hidden !important;
-        box-sizing: border-box !important;
-        padding: 0.4cm !important;
-    }
-
-    .receipt-page:last-child {
-        page-break-after: avoid !important;
-    }
-}
         /* --- Dark Mode Styles --- */
         body.dark-mode {
             background-color: #1a1a1a;
@@ -231,13 +230,15 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="concept" class="form-label">Concepto</label>
-                            <input type="text" class="form-control" id="concept" placeholder="Ej: Ofrenda, Donación, Compra de sillas" required>
+                            <input type="text" class="form-control" id="concept" placeholder="Ej: Ofrenda, Donación, Compra de sillas" list="concepts-list" required>
+                            <datalist id="concepts-list"></datalist>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label for="person" class="form-label">Recibido de / Pagado a</label>
-                            <input type="text" class="form-control" id="person" placeholder="Nombre de la persona o entidad" required>
+                            <input type="text" class="form-control" id="person" placeholder="Nombre de la persona o entidad" list="persons-list" required>
+                            <datalist id="persons-list"></datalist>
                         </div>
                     </div>
                     <div class="row">
@@ -814,6 +815,33 @@
                 });
             };
 
+            // --- Actualizar Sugerencias en Datalist ---
+            const updateSuggestions = () => {
+                const personsSet = new Set();
+                const conceptsSet = new Set();
+
+                cachedEntries.forEach(entry => {
+                    if (entry.person) personsSet.add(entry.person.trim());
+                    if (entry.concept) conceptsSet.add(entry.concept.trim());
+                });
+
+                const personsDatalist = document.getElementById('persons-list');
+                if (personsDatalist) {
+                    personsDatalist.innerHTML = '';
+                    personsSet.forEach(person => {
+                        personsDatalist.appendChild(new Option('', person));
+                    });
+                }
+
+                const conceptsDatalist = document.getElementById('concepts-list');
+                if (conceptsDatalist) {
+                    conceptsDatalist.innerHTML = '';
+                    conceptsSet.forEach(concept => {
+                        conceptsDatalist.appendChild(new Option('', concept));
+                    });
+                }
+            };
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const editId = document.getElementById('edit-id').value;
@@ -890,7 +918,6 @@
                 }
             };
 
-            // Plantilla reutilizable para generar la hoja Media Carta distribuida uniformemente
             const renderHalfLetterReceipt = (entry, settings, copyLabel) => {
                 const isIncome = entry.type === 'Ingreso';
                 const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
@@ -987,7 +1014,6 @@
                     }
                 }
 
-                // Restaurar vista limpia
                 receiptContent.innerHTML = `
                     <div id="receipt-print-area">
                         ${renderHalfLetterReceipt(currentReceiptEntry, settings, 'ORIGINAL')}
@@ -1053,6 +1079,7 @@
             const updateDisplay = async () => {
                 await fetchEntriesFromFirebase();
                 renderFundsDashboard();
+                updateSuggestions(); // Actualizar sugerencias de autocompletado
                 const filteredEntries = getFilteredEntries();
                 renderEntries(filteredEntries);
                 calculateAndRenderTotals(filteredEntries);
