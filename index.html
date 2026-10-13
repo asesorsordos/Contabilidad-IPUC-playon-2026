@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contabilidad Online</title>
+    <title>Contabilidad IPUC PLAYON 2026</title>
     <!-- Bootstrap CSS -->
     <link href="./libs/css/bootstrap.min.css" rel="stylesheet">
 <!-- Firebase App (Modular) -->
@@ -415,7 +415,7 @@
                         <li class="list-group-item"><strong>Generación de Recibos:</strong> Genera e imprime recibos detallados.</li>
                         <li class="list-group-item"><strong>Arqueo de Caja:</strong> Herramienta para facilitar el conteo de efectivo.</li>
                         <li class="list-group-item"><strong>Exportación a CSV:</strong> Exporta la vista actual a un archivo `.csv`.</li>
-                        <li class="list-group-item"><strong>Persistencia de Datos:</strong> Los datos se guardan localmente en tu navegador.</li>
+                        <li class="list-group-item"><strong>Persistencia de Datos:</strong> Los datos se guardan en la nube permitiendo trabajar en diferentes dispositivos.</li>
                     </ul>
 
                     <h4>¿Cómo usarlo?</h4>
@@ -509,24 +509,26 @@
     <!-- Bootstrap JS -->
     <script src="./libs/js/bootstrap.bundle.min.js"></script>
 
-   <!-- Firebase SDKs -->
+  <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // TODO: Reemplaza estos datos con los que te dio Firebase en tu consola
         const firebaseConfig = {
-            apiKey: "AIzaSyCut2sbxj1UKmwD2TinAgxBqXNiosM-PiU",
-            authDomain: "contabilidad2026-a489c.firebaseapp.com",
-            projectId: "contabilidad2026-a489c",
-            storageBucket: "contabilidad2026-a489c.firebasestorage.app",
-            messagingSenderId: "975948672958",
-            appId: "1:975948672958:web:b20be1bd0237a4a04f93ef"
+            apiKey: "TU_API_KEY",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            projectId: "tu-proyecto",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "tu_sender_id",
+            appId: "tu_app_id"
         };
 
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        let cachedEntries = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             const form = document.getElementById('accounting-form');
@@ -550,8 +552,6 @@
                 "Culto de sector", "Dorcas", "EVB", "Escuela Dominical", 
                 "Jóvenes", "Misiones", "Música", "Obra Social"
             ];
-
-            let cachedEntries = [];
 
             // --- Gestión de Configuración (Empresa y Logo) ---
             const getSettings = () => {
@@ -610,7 +610,7 @@
                 }
             });
 
-            // --- Gestión de Fondos (Corregida) ---
+            // --- Gestión de Fondos ---
             const getFunds = () => {
                 const fundsJSON = localStorage.getItem('accountingFunds');
                 if (fundsJSON) {
@@ -752,8 +752,6 @@
             };
 
             // --- Conexión Firebase (Entradas) ---
-            const getEntries = () => cachedEntries;
-
             const fetchEntriesFromFirebase = async () => {
                 const querySnapshot = await getDocs(collection(db, "entries"));
                 cachedEntries = [];
@@ -981,7 +979,7 @@
             };
 
             const getFilteredEntries = () => {
-                let entries = getEntries();
+                let entries = cachedEntries;
                 const selectedFund = fundFilter.value;
                 const selectedType = typeFilter.value;
                 const conceptQuery = conceptFilter.value.trim().toLowerCase();
@@ -1008,14 +1006,13 @@
                 const fundsDashboardContainer = document.getElementById('funds-dashboard');
                 if (!fundsDashboardContainer) return;
 
-                const entries = getEntries();
                 const fundOptions = getFunds();
                 const fundBalances = fundOptions.reduce((acc, fundName) => {
                     acc[fundName] = 0;
                     return acc;
                 }, {});
 
-                entries.forEach(entry => {
+                cachedEntries.forEach(entry => {
                     if (fundBalances.hasOwnProperty(entry.fund)) {
                         const amount = parseFloat(entry.amount) || 0;
                         if (entry.type === 'Ingreso') fundBalances[entry.fund] += amount;
@@ -1040,73 +1037,7 @@
                 });
             };
 
-            // --- Arqueo de Caja (Saldo Total + Persistencia) ---
-            window.openCashReconciliation = () => {
-                const entries = getEntries();
-                let totalIncome = 0;
-                let totalExpenses = 0;
-                entries.forEach(entry => {
-                    const amount = parseFloat(entry.amount) || 0;
-                    if (entry.type === 'Ingreso') totalIncome += amount;
-                    else totalExpenses += amount;
-                });
-                const totalBalance = totalIncome - totalExpenses;
-
-                const systemBalanceEl = document.getElementById('system-balance');
-                systemBalanceEl.textContent = `$${formatNumber(totalBalance)}`;
-                systemBalanceEl.dataset.rawBalance = totalBalance;
-                
-                const savedDenoms = JSON.parse(sessionStorage.getItem('cashReconciliationInputs')) || {};
-                document.querySelectorAll('.denom-input').forEach(input => {
-                    const value = input.dataset.value;
-                    input.value = savedDenoms[value] !== undefined ? savedDenoms[value] : '';
-                });
-
-                window.updateReconciliationTotals();
-                cashReconciliationModal.show();
-            };
-
-            window.updateReconciliationTotals = () => {
-                let physicalTotal = 0;
-                document.querySelectorAll('.denom-input').forEach(input => {
-                    const count = parseInt(input.value) || 0;
-                    const value = parseFloat(input.dataset.value);
-                    const subtotal = count * value;
-                    physicalTotal += subtotal;
-                    document.getElementById(`total-${String(value).replace('.','_')} `).textContent = `$${formatNumber(subtotal)}`;
-                });
-
-                document.getElementById('physical-total').textContent = `$${formatNumber(physicalTotal)}`;
-                const systemBalance = parseFloat(document.getElementById('system-balance').dataset.rawBalance) || 0;
-                const difference = physicalTotal - systemBalance;
-                const differenceEl = document.getElementById('balance-difference');
-                
-                differenceEl.classList.remove('text-success', 'text-danger', 'text-primary');
-                if (difference > 0) {
-                    differenceEl.classList.add('text-success');
-                    differenceEl.textContent = `$${formatNumber(difference)} (Sobrante)`;
-                } else if (difference < 0) {
-                    differenceEl.classList.add('text-danger');
-                    differenceEl.textContent = `$${formatNumber(difference)} (Faltante)`;
-                } else {
-                    differenceEl.classList.add('text-primary');
-                    differenceEl.textContent = `$${formatNumber(difference)} (Cuadra)`;
-                }
-            };
-
-            window.handleDenomInput = (input) => {
-                window.updateReconciliationTotals();
-                const savedDenoms = JSON.parse(sessionStorage.getItem('cashReconciliationInputs')) || {};
-                const value = input.dataset.value;
-                if (input.value === '' || input.value === '0') {
-                    delete savedDenoms[value];
-                } else {
-                    savedDenoms[value] = input.value;
-                }
-                sessionStorage.setItem('cashReconciliationInputs', JSON.stringify(savedDenoms));
-            };
-
-                      // Tema visual
+            // Tema visual
             const applyTheme = (theme) => {
                 if (theme === 'dark') {
                     body.classList.add('dark-mode');
@@ -1141,11 +1072,11 @@
             });
 
             await updateDisplay();
-        }); // <--- AQUÍ CIERRA EL DOMContentLoaded
+        });
 
         // --- FUNCIONES GLOBALES DE ARQUEO FUERA DEL DOMContentLoaded ---
         window.openCashReconciliation = () => {
-            const entries = JSON.parse(localStorage.getItem('accountingEntries')) || [];
+            const entries = cachedEntries;
             let totalIncome = 0;
             let totalExpenses = 0;
             entries.forEach(entry => {
@@ -1220,6 +1151,6 @@
             }
             sessionStorage.setItem('cashReconciliationInputs', JSON.stringify(savedDenoms));
         };
-            </script>
+    </script>
 </body>
 </html>
