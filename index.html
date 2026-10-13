@@ -42,8 +42,21 @@
         }
         @media print {
             body * {
-                visibility: hidden;
+                visibility: hidden; !important;
             }
+            #receipt-print-area, #receipt-print-area * {
+        visibility: visible !important;
+            }
+            #receipt-print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .modal-backdrop, .modal-header, .modal-footer {
+        display: none !important;
+    }
+}
             .print-section, .print-section * {
                 visibility: visible;
             }
@@ -928,6 +941,7 @@
             const entry = cachedEntries.find(e => e.id === id);
             const settings = getSettings();
             if (!entry) return;
+               receiptContent.innerHTML = ''; // Limpia cualquier residuo anterior
 
             const isIncome = entry.type === 'Ingreso';
             const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
