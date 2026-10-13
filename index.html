@@ -1106,7 +1106,7 @@
                 sessionStorage.setItem('cashReconciliationInputs', JSON.stringify(savedDenoms));
             };
 
-            // Tema visual
+                      // Tema visual
             const applyTheme = (theme) => {
                 if (theme === 'dark') {
                     body.classList.add('dark-mode');
@@ -1141,7 +1141,85 @@
             });
 
             await updateDisplay();
-        });
-        </script>
+        }); // <--- AQUÍ CIERRA EL DOMContentLoaded
+
+        // --- FUNCIONES GLOBALES DE ARQUEO FUERA DEL DOMContentLoaded ---
+        window.openCashReconciliation = () => {
+            const entries = JSON.parse(localStorage.getItem('accountingEntries')) || [];
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            entries.forEach(entry => {
+                const amount = parseFloat(entry.amount) || 0;
+                if (entry.type === 'Ingreso') totalIncome += amount;
+                else totalExpenses += amount;
+            });
+            const totalBalance = totalIncome - totalExpenses;
+
+            const systemBalanceEl = document.getElementById('system-balance');
+            systemBalanceEl.textContent = `$${new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(totalBalance)}`;
+            systemBalanceEl.dataset.rawBalance = totalBalance;
+            
+            const savedDenoms = JSON.parse(sessionStorage.getItem('cashReconciliationInputs')) || {};
+            document.querySelectorAll('.denom-input').forEach(input => {
+                const value = input.dataset.value;
+                input.value = savedDenoms[value] !== undefined ? savedDenoms[value] : '';
+            });
+
+            window.updateReconciliationTotals();
+            const modalEl = document.getElementById('cashReconciliationModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+        };
+
+        window.updateReconciliationTotals = () => {
+            let physicalTotal = 0;
+            const formatNum = (val) => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(val);
+            
+            document.querySelectorAll('.denom-input').forEach(input => {
+                const count = parseInt(input.value) || 0;
+                const value = parseFloat(input.dataset.value);
+                const subtotal = count * value;
+                physicalTotal += subtotal;
+                const totalCell = document.getElementById(`total-${String(value).replace('.', '_')}`);
+                if (totalCell) totalCell.textContent = `$${formatNum(subtotal)}`;
+            });
+
+            const physTotalEl = document.getElementById('physical-total');
+            if (physTotalEl) physTotalEl.textContent = `$${formatNum(physicalTotal)}`;
+
+            const systemBalanceEl = document.getElementById('system-balance');
+            const systemBalance = systemBalanceEl ? parseFloat(systemBalanceEl.dataset.rawBalance) || 0 : 0;
+            const difference = physicalTotal - systemBalance;
+            const differenceEl = document.getElementById('balance-difference');
+            
+            if (differenceEl) {
+                differenceEl.classList.remove('text-success', 'text-danger', 'text-primary');
+                if (difference > 0) {
+                    differenceEl.classList.add('text-success');
+                    differenceEl.textContent = `$${formatNum(difference)} (Sobrante)`;
+                } else if (difference < 0) {
+                    differenceEl.classList.add('text-danger');
+                    differenceEl.textContent = `$${formatNum(difference)} (Faltante)`;
+                } else {
+                    differenceEl.classList.add('text-primary');
+                    differenceEl.textContent = `$${formatNum(difference)} (Cuadra)`;
+                }
+            }
+        };
+
+        window.handleDenomInput = (input) => {
+            window.updateReconciliationTotals();
+            const savedDenoms = JSON.parse(sessionStorage.getItem('cashReconciliationInputs')) || {};
+            const value = input.dataset.value;
+            if (input.value === '' || input.value === '0') {
+                delete savedDenoms[value];
+            } else {
+                savedDenoms[value] = input.value;
+            }
+            sessionStorage.setItem('cashReconciliationInputs', JSON.stringify(savedDenoms));
+        };
+            </script>
 </body>
 </html>
