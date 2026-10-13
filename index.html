@@ -41,10 +41,40 @@
             max-height: 80px; max-width: 100%; border: 1px solid #ddd; padding: 5px; margin-top: 10px;
         }
         @media print {
-            body {
-                font-size: 1.1rem;
+            body * {
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .modal-footer {
+                display: none;
+            }
+            .modal-header .btn-close { display: none; }
+
+            /* Estilos específicos para Media Carta con Copia */
+            @page {
+                size: letter; /* O half-letter según tu impresora */
+                margin: 0.5cm;
+            }
+            .receipt-container-print {
+                height: 50%; /* Divide la hoja física en dos mitades exactas */
+                max-height: 13cm;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+            }
+            .receipt-divider {
+                border-bottom: 1px dashed #000;
+                margin: 1rem 0;
             }
         }
+
         @media print {
             body * {
                 visibility: hidden;
@@ -894,47 +924,68 @@
                 }
             };
 
-            window.showReceiptById = (id) => {
-                const entry = cachedEntries.find(e => e.id === id);
-                const settings = getSettings();
-                if (!entry) return;
+           window.showReceiptById = (id) => {
+            const entry = cachedEntries.find(e => e.id === id);
+            const settings = getSettings();
+            if (!entry) return;
 
-                const isIncome = entry.type === 'Ingreso';
-                const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
-                const personLabel = isIncome ? 'Recibido de' : 'Pagado a';
+            const isIncome = entry.type === 'Ingreso';
+            const receiptTitle = isIncome ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
+            const personLabel = isIncome ? 'Recibido de' : 'Pagado a';
 
-                receiptContent.innerHTML = `
-                    <div id="receipt-print-area">
-                        <div class="receipt">
-                            <div class="receipt-header">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="text-start">
-                                        ${settings.companyLogo ? `<img id="receipt-logo" src="${settings.companyLogo}" alt="Logo" style="max-height: 70px; max-width: 200px;">` : ''}
-                                        <h4 class="mt-2 mb-0">${settings.companyName || ''}</h4>
-                                    </div>
-                                    <div class="text-end">
-                                        <h2>${receiptTitle}</h2>
-                                        <div class="text-muted small">
-                                            <div>ID Trans.: ${entry.id}</div>
-                                            ${entry.receiptNumber ? `<div>Nro. Recibo: <strong>${entry.receiptNumber}</strong></div>` : ''}
-                                        </div>
-                                    </div>
-                                </div>
+            // Estructura interna del recibo (reutilizable para Original y Copia)
+            const receiptTemplate = (copyType) => `
+                <div class="receipt p-3" style="border: 1px solid #ccc; font-size: 0.9rem;">
+                    <div class="receipt-header mb-2 pb-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                ${settings.companyLogo ? `<img src="${settings.companyLogo}" alt="Logo" style="max-height: 45px; max-width: 150px; object-fit: contain;">` : ''}
+                                <h5 class="mt-1 mb-0" style="font-size: 1rem;">${settings.companyName || 'Contabilidad'}</h5>
                             </div>
-                            <div class="receipt-body">
-                                <p class="mt-4"><strong>Fecha:</strong> ${entry.date}</p>
-                                <p><strong>${personLabel}:</strong> ${entry.person || '_________________________'}</p>
-                                <p><strong>Concepto:</strong> ${entry.concept}</p>
-                                <p><strong>Tipo de Movimiento:</strong> ${entry.type}</p>
-                                <p><strong>Monto:</strong> $${formatNumber(parseFloat(entry.amount))}</p>
-                                <p><strong>Fondo Asignado:</strong> ${entry.fund}</p>
+                            <div class="text-end">
+                                <h6 class="mb-0 fw-bold">${receiptTitle}</h6>
+                                <span class="badge bg-secondary text-dark">${copyType}</span>
+                                <div class="small text-muted">Nro: ${entry.receiptNumber || entry.id}</div>
                             </div>
                         </div>
                     </div>
-                `;
-                receiptModal.show();
-            };
+                    <div class="receipt-body">
+                        <div class="row mb-1">
+                            <div class="col-6"><strong>Fecha:</strong> ${entry.date}</div>
+                            <div class="col-6"><strong>Fondo:</strong> ${entry.fund}</div>
+                        </div>
+                        <p class="mb-1"><strong>${personLabel}:</strong> ${entry.person || '_________________________'}</p>
+                        <p class="mb-1"><strong>Concepto:</strong> ${entry.concept}</p>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span><strong>Tipo:</strong> ${entry.type}</span>
+                            <span class="fs-6 fw-bold">Monto: $${formatNumber(parseFloat(entry.amount))}</span>
+                        </div>
+                        <div class="row mt-4 pt-3 text-center small">
+                            <div class="col-6">
+                                <div class="border-top border-dark pt-1">Firma Recibido</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border-top border-dark pt-1">Firma Tesorero(a)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
 
+            // Inyectamos ambas mitades (Original y Copia) en el área de impresión
+            receiptContent.innerHTML = `
+                <div id="receipt-print-area">
+                    <div class="receipt-container-print">
+                        ${receiptTemplate('ORIGINAL')}
+                    </div>
+                    <div class="receipt-divider"></div>
+                    <div class="receipt-container-print">
+                        ${receiptTemplate('COPIA')}
+                    </div>
+                </div>
+            `;
+            receiptModal.show();
+        };
             window.printContent = (elementId) => {
                 const printArea = document.getElementById(elementId);
                 if (!printArea) return;
