@@ -35,51 +35,53 @@
         }
 
         /* --- Reglas de Impresión Únicas y Estrictas --- */
-       @media print {
+      @media print {
     @page {
-        size: 5.5in 8.5in; /* Media Carta exacta */
-        margin: 0.2cm;
+        size: 5.5in 8.5in;
+        margin: 0.3cm;
     }
+
     body * {
         visibility: hidden !important;
     }
-    .print-section, .print-section * {
+
+    .print-section,
+    .print-section * {
         visibility: visible !important;
     }
+
     .print-section {
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    .modal-backdrop, .modal-header, .modal-footer {
+
+    .modal-backdrop,
+    .modal-header,
+    .modal-footer,
+    .btn-close {
         display: none !important;
     }
+
     .receipt-page {
-        height: 100vh !important;
-        max-height: 10cm !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
-        box-sizing: border-box !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         page-break-after: always !important;
         page-break-inside: avoid !important;
         overflow: hidden !important;
+        box-sizing: border-box !important;
+        padding: 0.4cm !important;
     }
+
     .receipt-page:last-child {
         page-break-after: avoid !important;
     }
 }
-        /* --- Mejoras Visuales --- */
-        .card.bg-success:hover, .card.bg-danger:hover, .card.bg-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            transition: all 0.2s ease-out;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: #eef5ff;
-        }
-
         /* --- Dark Mode Styles --- */
         body.dark-mode {
             background-color: #1a1a1a;
