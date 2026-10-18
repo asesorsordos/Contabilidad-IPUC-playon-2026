@@ -982,10 +982,10 @@
 
                 currentReceiptEntry = entry;
 
-                // Cambia dinámicamente el título del modal según el tipo
+                // Título limpio para la barra modal
                 const modalTitleEl = document.getElementById('receiptModalLabel');
                 if (modalTitleEl) {
-                   " modalTitleEl.textContent = `Comprobante de ${entry.type}`;"
+                    modalTitleEl.textContent = 'Detalle del Comprobante';
                 }
 
                 receiptContent.innerHTML = `
