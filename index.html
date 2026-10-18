@@ -989,21 +989,8 @@ const renderEntries = (entries) => {
                 const entry = cachedEntries.find(e => e.id === id);
                 const settings = getSettings();
                 if (!entry) return;
-                // --- AGREGAR ESTA LÍNEA PARA CAMBIAR EL TÍTULO DEL MODAL ---
-                const modalTitleEl = document.getElementById('receiptModalLabel');
-                if (modalTitleEl) {
-                    modalTitleEl.textContent = `Comprobante de ${entry.type}`;
-                }
-
-                receiptContent.innerHTML = `
-                    <div id="receipt-print-area">
-                        ${renderHalfLetterReceipt(entry, settings, 'ORIGINAL')}
-                    </div>
-                `;
-                receiptModal.show();
-            };
-
-                currentReceiptEntry = entry;
+                
+              currentReceiptEntry = entry;
                 receiptContent.innerHTML = `
                     <div id="receipt-print-area">
                         ${renderHalfLetterReceipt(entry, settings, 'ORIGINAL')}
