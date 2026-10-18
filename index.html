@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+const renderEntries = (entries) => {
+                historyTableBody.innerHTML = '';
+                
+                // Ordenar por fecha (del más reciente al más antiguo)
+                const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sorted.forEach(entry => {
+                    const row = document.createElement('tr');
+                    // ...<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -289,9 +297,9 @@
                         </select>
                     </div>
                     <div class="me-2 mb-2 mb-md-0">
-                        <label for="type-filter" class="form-label-sm me-1">Tipo:</label>
+                        <label for="type-filter" class="form-label-sm me-1">:</label>
                         <select id="type-filter" class="form-select form-select-sm w-auto d-inline-block">
-                            <option value="all">Todos los Tipos</option>
+                            <option value="all">Todos los s</option>
                             <option value="Ingreso">Ingresos</option>
                             <option value="Egreso">Egresos</option>
                         </select>
@@ -311,8 +319,8 @@
                                 <th>Fecha</th>
                                 <th>Nro. Recibo</th>
                                 <th>Concepto</th>
-                                <th>Recibido de / Pagado a</th>
-                                <th>Tipo</th>
+                                <th>Recibido de: / Pagado a:</th>
+                                <th></th>
                                 <th>Monto</th>
                                 <th>Fondo</th>
                                 <th>Acciones</th>
@@ -957,7 +965,7 @@
                                 <strong>Concepto:</strong> ${entry.concept}
                             </div>
                             <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border my-4">
-                                <span class="fs-5"><strong>Tipo:</strong> ${entry.type}</span>
+                                <span class="fs-5"><strong>:</strong> ${entry.type}</span>
                                 <span class="fs-4 fw-bold text-primary">Monto: $${formatNumber(parseFloat(entry.amount))}</span>
                             </div>
                         </div>
@@ -981,6 +989,19 @@
                 const entry = cachedEntries.find(e => e.id === id);
                 const settings = getSettings();
                 if (!entry) return;
+                // --- AGREGAR ESTA LÍNEA PARA CAMBIAR EL TÍTULO DEL MODAL ---
+                const modalTitleEl = document.getElementById('receiptModalLabel');
+                if (modalTitleEl) {
+                    modalTitleEl.textContent = `Comprobante de ${entry.type}`;
+                }
+
+                receiptContent.innerHTML = `
+                    <div id="receipt-print-area">
+                        ${renderHalfLetterReceipt(entry, settings, 'ORIGINAL')}
+                    </div>
+                `;
+                receiptModal.show();
+            };
 
                 currentReceiptEntry = entry;
                 receiptContent.innerHTML = `
