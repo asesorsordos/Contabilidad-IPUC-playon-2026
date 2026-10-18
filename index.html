@@ -985,12 +985,19 @@ const renderEntries = (entries) => {
                 `;
             };
 
-            window.showReceiptById = (id) => {
+           window.showReceiptById = (id) => {
                 const entry = cachedEntries.find(e => e.id === id);
                 const settings = getSettings();
                 if (!entry) return;
-                
-              currentReceiptEntry = entry;
+
+                currentReceiptEntry = entry;
+
+                // Cambia dinámicamente el título del modal según el tipo
+                const modalTitleEl = document.getElementById('receiptModalLabel');
+                if (modalTitleEl) {
+                    modalTitleEl.textContent = `Comprobante de ${entry.type}`;
+                }
+
                 receiptContent.innerHTML = `
                     <div id="receipt-print-area">
                         ${renderHalfLetterReceipt(entry, settings, 'ORIGINAL')}
