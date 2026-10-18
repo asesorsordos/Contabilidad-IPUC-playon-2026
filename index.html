@@ -35,10 +35,15 @@
 
         /* --- Reglas de Impresión Únicas y Estrictas --- */
         @media print {
-            @page {
-                size: 5.5in 8.5in; /* Tamaño exacto Media Carta (Half-Letter) */
-                margin: 0.4cm;     
-            }
+    body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #fff !important;
+    }
+    .receipt-page {
+        border: none !important; /* Opcional: quita el borde exterior al imprimir en papel membretado o preimpreso */
+        box-shadow: none !important;
+    }
             body * {
                 visibility: hidden !important;
             }
@@ -927,8 +932,7 @@
                 const personLabel = isIncome ? 'Recibido de' : 'Pagado a';
 
                 return `
-<div class="receipt-page p-3 border rounded bg-white" style="height: 5.3in; max-height: 5.3in; box-sizing: border-box; overflow: hidden;">                        <!-- Encabezado con Logo -->
-                        <div class="receipt-header border-bottom border-dark pb-3 mb-3">
+<div class="receipt-page p-3 border rounded bg-white" style="height: 4.8in; max-height: 4.8in; box-sizing: border-box; overflow: hidden;">                        <div class="receipt-header border-bottom border-dark pb-3 mb-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     ${settings.companyLogo ? `<img src="${settings.companyLogo}" alt="Logo" style="max-height: 60px; max-width: 180px; object-fit: contain;">` : ''}
