@@ -996,10 +996,11 @@
                 receiptModal.show();
             };
 
-            window.printReceipt = (includeCopy) => {
+         window.printReceipt = (includeCopy) => {
                 if (!currentReceiptEntry) return;
                 const settings = getSettings();
                 
+                // 1. Armar el HTML del recibo (original y copia opcional)
                 let printHTML = `
                     <div id="receipt-print-area">
                         ${renderHalfLetterReceipt(currentReceiptEntry, settings, 'ORIGINAL')}
@@ -1011,23 +1012,18 @@
 
                 printHTML += `</div>`;
 
-                receiptContent.innerHTML = printHTML;
+                // 2. Guardar el contenido original de toda la página
+                const originalBody = document.body.innerHTML;
 
-                const printArea = document.getElementById('receipt-print-area');
-                if (printArea) {
-                    const parentModalBody = printArea.closest('.modal-body');
-                    if (parentModalBody) {
-                        parentModalBody.classList.add('print-section');
-                        window.print();
-                        parentModalBody.classList.remove('print-section');
-                    }
-                }
+                // 3. Reemplazar temporalmente el body SOLO con el recibo
+                document.body.innerHTML = printHTML;
 
-                receiptContent.innerHTML = `
-                    <div id="receipt-print-area">
-                        ${renderHalfLetterReceipt(currentReceiptEntry, settings, 'ORIGINAL')}
-                    </div>
-                `;
+                // 4. Lanzar la ventana de impresión del navegador (imprimirá exactamente 1 o 2 hojas según la copia)
+                window.print();
+
+                // 5. Restaurar la interfaz original y recargar datos
+                document.body.innerHTML = originalBody;
+                window.location.reload();
             };
 
             window.printContent = (elementId) => {
